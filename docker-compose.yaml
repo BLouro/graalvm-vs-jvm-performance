@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    environment:
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432:5432"
+
+  spring-boot-jvm:
+    build:
+      context: ./spring-boot-jvm 
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      -SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/demodb
+      -SPRING_DATASOURCE_USERNAME: demo
+      -SPRING_DATASOURCE_PASSWORD: demo
+      -SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
+      -SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+      
+  spring-boot-graalvm:
+    build:
+      context: ./spring-boot-graalvm
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      -SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/demodb
+      -SPRING_DATASOURCE_USERNAME: demo
+      -SPRING_DATASOURCE_PASSWORD: demo
+      -SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
+      -SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
