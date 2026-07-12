@@ -12,10 +12,6 @@ scrape_configs:
     static_configs:
       - targets: ["spring-boot-graalvm:8080"]
 
-  - job_name: "cadvisor"
-    static_configs:
-      - targets: ["cadvisor:8080"]
-
   - job_name: "pushgateway"
     honor_labels: true
     static_configs:

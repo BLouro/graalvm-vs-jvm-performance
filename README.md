@@ -14,14 +14,14 @@ memory, and steady-state resource usage under sustained load.
 - **postgres** — shared database
 - **k6** — load generator
 - **Prometheus + Grafana** — metrics and dashboards
-- **Pushgateway** — lets ad-hoc container-stats samples show up live in Grafana
-  (works around cAdvisor not being able to see individual containers on Docker
-  Desktop for Mac — see [Known limitations](#known-limitations))
+- **Pushgateway** — lets container-stats samples (memory/CPU straight from the
+  Docker API) show up live in Grafana; cAdvisor was tried for this first but
+  doesn't see individual containers on Docker Desktop for Mac, so it was dropped
 
 ## How to run
 
 ```bash
-docker compose up -d            # infra: both apps, postgres, prometheus, grafana, cadvisor, pushgateway
+docker compose up -d            # infra: both apps, postgres, prometheus, grafana, pushgateway
 ./scripts/measure-startup.sh    # cold-start time + idle memory, before any load
 ./k6/run-test-.sh                # 3 repetitions of sustained load, per variant (~35-40 min total)
 ```
@@ -74,10 +74,6 @@ every run):
   doesn't have the same Metaspace/Code Cache concepts. The "Container CPU/Memory
   Usage" panels (whole-container memory, seen from outside) are the more correct
   number for a direct comparison.
-- **cAdvisor doesn't report per-container metrics on Docker Desktop for Mac** — a
-  known limitation of that virtualization setup, not a config error. That's why
-  "Container CPU/Memory Usage" is fed by the Pushgateway (via
-  `sample-container-stats.sh`) instead.
 - **The Pushgateway holds the last pushed value indefinitely**, even after
   `sample-container-stats.sh` stops — the "Container CPU/Memory Usage" panels will
   show a flat, stale line outside the windows where the sampler was actually
