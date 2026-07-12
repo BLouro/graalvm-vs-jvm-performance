@@ -3,6 +3,8 @@ package com.example.demo.controllers;
 import com.example.demo.entities.Book;
 import com.example.demo.services.BookService;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +34,7 @@ public class BookController {
     }
 
     @PostMapping
-    public Book createBook(@RequestBody Book book) {
+    public Book createBook(@Valid @RequestBody Book book) {
         return bookService.saveBook(book);
     }
 

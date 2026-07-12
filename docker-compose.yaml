@@ -7,33 +7,83 @@ services:
       POSTGRES_PASSWORD: "postgres"
     ports:
       - "5432:5432"
+    mem_limit: 512m
+    cpus: "1.0"
+
 
   spring-boot-jvm:
+    container_name: spring-boot-jvm
     build:
       context: ./spring-boot-jvm 
       dockerfile: Dockerfile
     depends_on:
       - postgres
     environment:
-      -SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/demodb
-      -SPRING_DATASOURCE_USERNAME: demo
-      -SPRING_DATASOURCE_PASSWORD: demo
-      -SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
-      -SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/demodb
+      SPRING_DATASOURCE_USERNAME: demo
+      SPRING_DATASOURCE_PASSWORD: demo
+      SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
+      SERVER_PORT: 8080
     ports:
       - "8080:8080"
+    mem_limit: 512m
+    cpus: "1.0"
       
   spring-boot-graalvm:
+    container_name: spring-boot-graalvm
     build:
       context: ./spring-boot-graalvm
       dockerfile: Dockerfile
     depends_on:
       - postgres
     environment:
-      -SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/demodb
-      -SPRING_DATASOURCE_USERNAME: demo
-      -SPRING_DATASOURCE_PASSWORD: demo
-      -SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
-      -SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/demodb
+      SPRING_DATASOURCE_USERNAME: demo
+      SPRING_DATASOURCE_PASSWORD: demo
+      SPRING_DATASOURCE_DRIVER: org.postgresql.Driver
+      SERVER_PORT: 8080
     ports:
-      - "8081:8081"
+      - "8081:8080"
+    mem_limit: 512m
+    cpus: "1.0"
+    
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    mem_limit: 256m
+    cpus: "0.5"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    mem_limit: 256m
+    cpus: "0.5"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    container_name: cadvisor
+    ports:
+      - "8089:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    mem_limit: 256m
+    cpus: "0.5"
+
+  pushgateway:
+    image: prom/pushgateway
+    ports:
+      - "9091:9091"
+    mem_limit: 128m
+    cpus: "0.25"

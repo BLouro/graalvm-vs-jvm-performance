@@ -1,12 +1,15 @@
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk AS builder
 
-# the JAR file path
-ARG JAR_FILE=target/*.jar
+WORKDIR /app
 
-# Copy the JAR file from the build context into the Docker image
-COPY ${JAR_FILE} application.jar
+COPY . .
 
-CMD apt-get update -y
+RUN ./mvnw clean package -DskipTests
 
-# Set the default command to run the Java application
-ENTRYPOINT ["java", "-Xmx2048M", "-jar", "/application.jar"]
+FROM eclipse-temurin:17-jre
+
+WORKDIR /app
+
+COPY --from=builder /app/target/*.jar /app/application.jar
+
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/application.jar"]

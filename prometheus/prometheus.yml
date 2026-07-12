@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: "spring-boot-jvm"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["spring-boot-jvm:8080"]
+
+  - job_name: "spring-boot-graalvm"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["spring-boot-graalvm:8080"]
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+
+  - job_name: "pushgateway"
+    honor_labels: true
+    static_configs:
+      - targets: ["pushgateway:9091"]
