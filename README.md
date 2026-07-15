@@ -62,6 +62,42 @@ every run):
    native's advantage is usually most visible, and the k6 load test alone won't
    capture it.
 
+## Example results
+
+From one clean local run (MacBook, Docker Desktop, 1 CPU / 512MB per app container,
+10 VUs, 70% GET / 30% POST). Of the 6 repetitions (3 per variant), one JVM run was
+thrown out because the Mac went to sleep mid-test (k6 reported 24m28s of real time
+for what should've been a 5m45s run) — numbers below are the 2 remaining clean JVM
+runs and all 3 clean native runs. Treat this as one example data point, not a
+universal verdict — see [Known limitations](#known-limitations) before drawing
+conclusions from it.
+
+**Throughput & latency** (`k6/results/<label>-run<N>.json`):
+
+| | Requests/s | Avg latency | p90 | p95 | Failed |
+|---|---|---|---|---|---|
+| JVM | 85.3 | 6.5ms | 8.6ms | 9.3ms | 0.000% |
+| Native | 84.2 | 7.2ms | 9.4ms | 10.2ms | 0.002% |
+
+Throughput is basically identical — expected, since at 10 VUs with a 0.1s sleep per
+iteration, the load generator itself is the bottleneck, not the app. Latency is
+close too, with the JVM slightly ahead (sub-millisecond difference) once warmed up.
+
+**Container memory & CPU** (`k6/results/mem-cpu-<label>.csv`, sampled every 2s across all 3 repetitions):
+
+| | Mem mean | Mem median | Mem max | CPU mean | CPU median | CPU max |
+|---|---|---|---|---|---|---|
+| JVM | 309.7 MiB | 312.0 MiB | 314.7 MiB | 12.1% | 9.4% | **87.9%** |
+| Native | 85.0 MiB | 91.3 MiB | 130.5 MiB | 12.8% | 13.3% | 20.4% |
+
+This is where the two variants actually diverge:
+- **Memory:** native used roughly a third of the JVM's footprint, consistently
+  (min 32.9 MiB / max 130.5 MiB vs. the JVM's tight 270.8-314.7 MiB band).
+- **CPU shape, not just average:** mean CPU is similar, but the JVM has a max of
+  88% against native's 20% — the JVM has occasional sharp spikes (JIT compilation,
+  G1 GC pauses), while native stays flat (Serial GC, no JIT warm-up). Same average
+  load, very different variance.
+
 ## Known limitations
 
 - **Different GC, not just different runtime.** JVM 17 uses G1 by default. GraalVM
